@@ -34,7 +34,6 @@ void mensajeEstado(int valorRetorno);
 int main( int argc, char *argv[] ) {
    
    int sockfd, newsockfd, portno, clilen;
-   char buffer[SIZE];
    struct sockaddr_in serv_addr, cli_addr;
    int n, pid;
    
@@ -64,16 +63,15 @@ int main( int argc, char *argv[] ) {
    */
    
    n=listen(sockfd,5);
-    printf("Listen");
-      mensajeEstado(n);
+   printf("Listen");
+   mensajeEstado(n);
    clilen = sizeof(cli_addr);
    
    while (1) {
       newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
       printf("Accept");
       mensajeEstado(newsockfd);
-      
-      
+            
       /* Create child process */
       pid = fork();
       
@@ -98,7 +96,9 @@ int main( int argc, char *argv[] ) {
 void doprocessing (int sock) {
 
    int n, id, st;
-   char buffer[SIZE], name[128], buffer_dest[SIZE];
+   Byte * buffer[SIZE];
+   Byte * buffer_dest[SIZE];
+   char name[128];
    bzero(buffer,512);
 
    /*n = read(sock,name,128);// Read the file name from client
@@ -108,35 +108,33 @@ void doprocessing (int sock) {
    n=write(sock, "OK", 20);
    printf("writing ");
    mensajeEstado(n);
-
-   strcat(name, ".recv");*/
-
+   //strcat(name, ".recv");
+   
    id = open( "name", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR );
    if ( -1 == id ) {
       printf( "Can not create file %s\n", "name" );
       exit( 1 );
-   }
+   }*/
 
-  
-
+   uLong ucompSize = st; // "Hello, world!" + NULL delimiter.
+   ucompSize++;
+   uLong compSize = compressBound(ucompSize);
+   
    while ((st = read(sock,buffer,SIZE)) > 0 ) { // Read returns EOF when we shutdown 
       printf("Reading compressed file ");
       mensajeEstado(st);
-       uLong ucompSize = st; // "Hello, world!" + NULL delimiter.
-         ucompSize++;
-      uLong compSize = compressBound(ucompSize);
       // Inflate
-      int err=uncompress((Bytef *)buffer_dest, &ucompSize, (Bytef *)buffer, compSize);
-       CHECK_ERR(err, "uncomprss");
+      int err=uncompress(buffer_dest, &ucompSize, buffer, compSize);
+      CHECK_ERR(err, "uncomprss");
       //write( id, buffer_dest, st ); 
-      //bzero(buffer_dest,SIZE);           // the writing socket in client
-      //bzero(buffer,SIZE); 
+      bzero(buffer_dest,SIZE);           // the writing socket in client
+      bzero(buffer,SIZE); 
    }
 
    n=write(sock,"ACK", 20 ); // Send an ACK to client, it will stop time counting upon receive
-   printf("writing ");
+   printf("writing  ack");
    mensajeEstado(n);
-   close ( id );
+   //close (id);
    exit( 0 );
    
 }
